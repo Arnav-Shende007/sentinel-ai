@@ -16,8 +16,7 @@ const Footer = () => (
           <a href="#team" className="hover:text-foreground transition-colors">Team</a>
         </div>
         <div className="text-xs text-muted-foreground text-center md:text-right">
-          <div>PS-07 — Hackathon 2025</div>
-          <div className="mt-1 text-foreground/30">Built with React, Tailwind CSS & AI</div>
+          <div className="text-foreground/30">Built with React, Tailwind CSS & AI</div>
         </div>
       </div>
     </div>

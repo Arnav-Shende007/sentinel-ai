@@ -34,16 +34,6 @@ const Hero = () => {
 
       <div className="section-container py-24 md:py-32">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-medium mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              PS-07 — Hackathon Project
-            </div>
-          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}

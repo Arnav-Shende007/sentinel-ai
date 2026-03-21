@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { Github, Linkedin } from "lucide-react";
 
 const team = [
-  { name: "Aarav Mehta", role: "ML Engineer", initials: "AM" },
-  { name: "Diya Sharma", role: "Full-Stack Developer", initials: "DS" },
-  { name: "Rohan Gupta", role: "Data Scientist", initials: "RG" },
-  { name: "Kavya Nair", role: "Frontend & UX", initials: "KN" },
+  { name: "Arnav Shende", role: "ML Engineer", initials: "AS" },
+  { name: "Vedant Kowdiki", role: "Full-Stack Developer", initials: "VK" },
+  { name: "Aryan Medigeri", role: "Data Scientist", initials: "AM" },
+  { name: "Sakshi Sharan", role: "Frontend & UX", initials: "SS" },
 ];
 
 const Team = () => (
