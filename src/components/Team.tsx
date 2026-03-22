@@ -2,10 +2,34 @@ import { motion } from "framer-motion";
 import { Github, Linkedin } from "lucide-react";
 
 const team = [
-  { name: "Arnav Shende", role: "ML Engineer", initials: "AS" },
-  { name: "Vedant Kowdiki", role: "Full-Stack Developer", initials: "VK" },
-  { name: "Aryan Medigeri", role: "Data Scientist", initials: "AM" },
-  { name: "Sakshi Sharan", role: "Frontend & UX", initials: "SS" },
+  {
+    name: "Arnav Shende",
+    role: "ML Engineer",
+    initials: "AS",
+    github: "https://github.com/Arnav-Shende007",
+    linkedin: "https://www.linkedin.com/in/arnav-shende-396a61328/",
+  },
+  {
+    name: "Aryan Medigeri",
+    role: "Data Scientist",
+    initials: "AM",
+    github: "https://github.com/AryanMedigeri08",
+    linkedin: "https://www.linkedin.com/in/aryan-medigeri-6942973b4/",
+  },
+  {
+    name: "Vedant Kowdiki",
+    role: "Full-Stack Developer",
+    initials: "VK",
+    github: "https://github.com/Vex-15",
+    linkedin: "https://www.linkedin.com/in/vedant-kowdiki-/",
+  },
+  {
+    name: "Sakshi Sharan",
+    role: "Frontend & UX",
+    initials: "SS",
+    github: "https://github.com/Sakshisharan12",
+    linkedin: "https://www.linkedin.com/in/sakshi-s-8bb533302/",
+  },
 ];
 
 const Team = () => (
@@ -37,8 +61,8 @@ const Team = () => (
             <h4 className="font-semibold">{m.name}</h4>
             <p className="text-xs text-muted-foreground mt-1 mb-4">{m.role}</p>
             <div className="flex justify-center gap-3">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Github className="w-4 h-4" /></a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin className="w-4 h-4" /></a>
+                <a href={m.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors"><Github className="w-4 h-4" /></a>
+                <a href={m.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin className="w-4 h-4" /></a>
             </div>
           </motion.div>
         ))}
