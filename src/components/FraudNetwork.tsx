@@ -1,17 +1,52 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Search, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Loader2, Globe, Target } from "lucide-react";
 
 interface GraphNode { id: string; x: number; y: number; fraud: boolean; mule: boolean; mule_score: number; community: number; }
 interface GraphEdge { from: string; to: string; fraud: boolean; weight: number; }
 interface Cluster { cluster_id: string; members: number; fraud_nodes: number; mule_nodes: number; risk: string; fraud_ratio: number; }
 interface GraphData { nodes: GraphNode[]; edges: GraphEdge[]; clusters: Cluster[]; stats: { total_nodes: number; total_edges: number; fraud_nodes: number; mule_accounts: number; suspicious_clusters: number }; }
 
+// Seeded pseudo-random for deterministic "normal" nodes
+const seededRandom = (seed: number) => {
+  let s = seed;
+  return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; };
+};
+
+const generateNormalNodes = (count: number): { nodes: GraphNode[]; edges: GraphEdge[] } => {
+  const rand = seededRandom(42);
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+  for (let i = 0; i < count; i++) {
+    nodes.push({
+      id: `NORM-${String(i + 1).padStart(4, "0")}`,
+      x: 5 + rand() * 90,
+      y: 5 + rand() * 90,
+      fraud: false,
+      mule: false,
+      mule_score: 0,
+      community: Math.floor(rand() * 8),
+    });
+  }
+  // Generate random edges between normal nodes
+  for (let i = 0; i < count * 1.5; i++) {
+    const a = Math.floor(rand() * count);
+    const b = Math.floor(rand() * count);
+    if (a !== b) {
+      edges.push({ from: nodes[a].id, to: nodes[b].id, fraud: false, weight: rand() * 0.5 });
+    }
+  }
+  return { nodes, edges };
+};
+
 const FraudNetwork = () => {
   const [data, setData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(true);
   const [detected, setDetected] = useState(false);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"global" | "isolate">("global");
+
+  const normalData = useMemo(() => generateNormalNodes(80), []);
 
   useEffect(() => {
     fetch("/api/graph").then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
@@ -32,6 +67,15 @@ const FraudNetwork = () => {
     );
   }
 
+  // Merge data based on view mode
+  const displayNodes = viewMode === "global" ? [...normalData.nodes, ...data.nodes] : data.nodes;
+  const displayEdges = viewMode === "global" ? [...normalData.edges, ...data.edges] : data.edges;
+  const allNodeMap = new Map(displayNodes.map(n => [n.id, n]));
+
+  const totalNormal = viewMode === "global"
+    ? normalData.nodes.length + (data.stats.total_nodes - data.stats.fraud_nodes - data.stats.mule_accounts)
+    : data.stats.total_nodes - data.stats.fraud_nodes - data.stats.mule_accounts;
+
   return (
     <section className="py-24 md:py-32 border-t border-white/[0.04]">
       <div className="section-container">
@@ -43,48 +87,84 @@ const FraudNetwork = () => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="glass-card p-6">
+          {/* Toggle + Legend + Button */}
           <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            {/* View mode toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-secondary/50 border border-white/[0.06]">
+              <button
+                onClick={() => setViewMode("global")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-300 ${
+                  viewMode === "global"
+                    ? "bg-primary/20 text-primary shadow-[0_0_10px_hsl(190,95%,55%,0.15)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" /> View Global Network
+              </button>
+              <button
+                onClick={() => setViewMode("isolate")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-300 ${
+                  viewMode === "isolate"
+                    ? "bg-[hsl(0,72%,55%)]/20 text-[hsl(0,72%,55%)] shadow-[0_0_10px_hsl(0,72%,55%,0.15)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Target className="w-3.5 h-3.5" /> Isolate Fraud Rings
+              </button>
+            </div>
+
             <div className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Normal ({data.stats.total_nodes - data.stats.fraud_nodes - data.stats.mule_accounts})</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Normal ({totalNormal})</span>
               <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[hsl(0,72%,55%)]" /> Fraud ({data.stats.fraud_nodes})</span>
               <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[hsl(38,92%,55%)]" /> Mule ({data.stats.mule_accounts})</span>
             </div>
+
             <button onClick={handleDetect} className="btn-primary text-xs px-4 py-2">
               <Search className="w-3.5 h-3.5" /> Detect Fraud Rings
             </button>
           </div>
 
-          <svg viewBox="0 0 100 100" className="w-full max-w-2xl mx-auto aspect-square">
-            {data.edges.map((e, i) => {
-              const from = data.nodes.find((n) => n.id === e.from);
-              const to = data.nodes.find((n) => n.id === e.to);
-              if (!from || !to) return null;
-              return (
-                <line key={i} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-                  stroke={detected && e.fraud ? "hsl(0,72%,55%)" : "hsl(222,30%,20%)"}
-                  strokeWidth={detected && e.fraud ? 0.4 : 0.15}
-                  opacity={detected && e.fraud ? 0.8 : 0.5}
-                  className="transition-all duration-700" />
-              );
-            })}
-            {data.nodes.map((n) => {
-              const isFraud = detected && n.fraud;
-              const isMule = detected && n.mule;
-              const fill = isFraud ? "hsl(0,72%,55%)" : isMule ? "hsl(38,92%,55%)" : "hsl(190,95%,55%)";
-              const r = hoveredNode === n.id ? 2.2 : isFraud || isMule ? 1.8 : 1.2;
-              return (
-                <g key={n.id}>
-                  {(isFraud || isMule) && (<circle cx={n.x} cy={n.y} r={3} fill={fill} opacity={0.15} className="animate-pulse" />)}
-                  <circle cx={n.x} cy={n.y} r={r} fill={fill} className="transition-all duration-500 cursor-pointer"
-                    onMouseEnter={() => setHoveredNode(n.id)} onMouseLeave={() => setHoveredNode(null)}
-                    style={{ filter: isFraud || isMule ? `drop-shadow(0 0 3px ${fill})` : undefined }} />
-                  {hoveredNode === n.id && (
-                    <text x={n.x} y={n.y - 3} textAnchor="middle" fill="hsl(210,40%,96%)" fontSize="2" fontFamily="monospace">{n.id}</text>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
+          <AnimatePresence mode="wait">
+            <motion.svg
+              key={viewMode}
+              viewBox="0 0 100 100"
+              className="w-full max-w-2xl mx-auto aspect-square"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5 }}
+            >
+              {displayEdges.map((e, i) => {
+                const from = allNodeMap.get(e.from);
+                const to = allNodeMap.get(e.to);
+                if (!from || !to) return null;
+                return (
+                  <line key={`${viewMode}-e-${i}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                    stroke={detected && e.fraud ? "hsl(0,72%,55%)" : "hsl(222,30%,20%)"}
+                    strokeWidth={detected && e.fraud ? 0.4 : 0.12}
+                    opacity={detected && e.fraud ? 0.8 : 0.35}
+                    className="transition-all duration-700" />
+                );
+              })}
+              {displayNodes.map((n) => {
+                const isFraud = detected && n.fraud;
+                const isMule = detected && n.mule;
+                const fill = isFraud ? "hsl(0,72%,55%)" : isMule ? "hsl(38,92%,55%)" : "hsl(190,95%,55%)";
+                const r = hoveredNode === n.id ? 2.2 : isFraud || isMule ? 1.8 : viewMode === "global" && !n.fraud && !n.mule ? 0.8 : 1.2;
+                return (
+                  <g key={n.id}>
+                    {(isFraud || isMule) && (<circle cx={n.x} cy={n.y} r={3} fill={fill} opacity={0.15} className="animate-pulse" />)}
+                    <circle cx={n.x} cy={n.y} r={r} fill={fill} className="transition-all duration-500 cursor-pointer"
+                      onMouseEnter={() => setHoveredNode(n.id)} onMouseLeave={() => setHoveredNode(null)}
+                      style={{ filter: isFraud || isMule ? `drop-shadow(0 0 3px ${fill})` : undefined }} />
+                    {hoveredNode === n.id && (
+                      <text x={n.x} y={n.y - 3} textAnchor="middle" fill="hsl(210,40%,96%)" fontSize="2" fontFamily="monospace">{n.id}</text>
+                    )}
+                  </g>
+                );
+              })}
+            </motion.svg>
+          </AnimatePresence>
 
           {/* Cluster info */}
           {detected && data.clusters.length > 0 && (

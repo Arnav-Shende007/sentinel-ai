@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Mail, MessageSquare, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
+import { Bell, Mail, MessageSquare, CheckCircle2, AlertTriangle, FileBarChart } from "lucide-react";
+import ComplianceReportModal from "./ComplianceReportModal";
 
 interface Alert {
   id: string;
@@ -23,6 +24,7 @@ const Alerts = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [sent, setSent] = useState<string[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/alerts").then((r) => r.json()).then((d) => { setAlerts(d.alerts || []); setLoading(false); }).catch(() => setLoading(false));
@@ -69,9 +71,17 @@ const Alerts = () => {
         {/* Alert log table */}
         {!loading && alerts.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="glass-card p-5 overflow-x-auto">
-            <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-[hsl(38,92%,55%)]" /> Recent Fraud Alerts ({alerts.length})
-            </h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-[hsl(38,92%,55%)]" /> Recent Fraud Alerts ({alerts.length})
+              </h4>
+              <button
+                onClick={() => setReportOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-200"
+              >
+                <FileBarChart className="w-3.5 h-3.5" /> Export Compliance Report
+              </button>
+            </div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground border-b border-white/[0.06]">
@@ -100,6 +110,9 @@ const Alerts = () => {
             </table>
           </motion.div>
         )}
+
+        {/* Compliance Report Modal */}
+        <ComplianceReportModal open={reportOpen} onClose={() => setReportOpen(false)} alerts={alerts} />
       </div>
     </section>
   );

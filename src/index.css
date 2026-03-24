@@ -196,3 +196,27 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+/* Print styles for Compliance Report */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #compliance-report-modal,
+  #compliance-report-modal * {
+    visibility: visible;
+  }
+  #compliance-report-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #compliance-report-modal .print\:hidden {
+    display: none !important;
+  }
+}
