@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Loader2, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Send, Loader2, AlertTriangle, CheckCircle2, XCircle, RotateCcw, ShieldCheck, ShieldAlert } from "lucide-react";
 import RiskGauge from "./RiskGauge";
 
 interface FeatureContribution {
@@ -38,6 +38,24 @@ const defaultForm = {
   location: "Mumbai",
 };
 
+const safeExample = {
+  sender: "UPI-1000000012",
+  receiver: "UPI-1000000008",
+  amount: "350",
+  time: "14:15",
+  device: "Trusted iPhone",
+  location: "Bangalore",
+};
+
+const fraudExample = {
+  sender: "UPI-1000000047",
+  receiver: "UPI-1000000099",
+  amount: "49800",
+  time: "03:12",
+  device: "New Android",
+  location: "Unknown VPN",
+};
+
 const featureLabels: Record<string, string> = {
   amount_log: "Transaction Amount",
   amount_zscore: "Amount Deviation",
@@ -51,16 +69,66 @@ const featureLabels: Record<string, string> = {
   day_of_week: "Day of Week",
 };
 
+const featureTooltips: Record<string, string> = {
+  amount_log: "Log-scaled transaction amount relative to typical UPI transfers",
+  amount_zscore: "Standard deviations from the user's historical average amount",
+  hour: "Hour of day when the transaction was initiated",
+  is_night: "Transactions between 12 AM – 5 AM carry higher inherent risk",
+  is_weekend: "Weekend transactions may differ from weekday behavioral norms",
+  device_changed: "A new or previously unseen device was used for this transaction",
+  is_new_recipient: "The recipient has never received funds from this sender before",
+  geo_distance_km: "Distance between transaction origin and user's usual location",
+  txn_count_daily: "Number of transactions from this sender today vs. their average",
+  day_of_week: "Day of the week can affect fraud probability patterns",
+};
+
+const ANALYSIS_STEPS = [
+  { icon: "🔍", label: "Extracting device intelligence...", done: "Device profile extracted" },
+  { icon: "🧠", label: "Analyzing behavioral history via Isolation Forest...", done: "Anomaly score computed" },
+  { icon: "🕸️", label: "Checking Louvain community thresholds...", done: "Graph risk assessed" },
+  { icon: "⚡", label: "Running XGBoost risk scorer...", done: "Final score generated" },
+];
+
+const STEP_DELAY = 800; // ms between each step
+
 const LiveDemo = () => {
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScoreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState(-1);
+  const pendingResult = useRef<ScoreResult | null>(null);
+  const animationDone = useRef(false);
+
+  // Drive step-by-step animation
+  useEffect(() => {
+    if (!loading) return;
+    setActiveStep(0);
+    animationDone.current = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    ANALYSIS_STEPS.forEach((_, i) => {
+      if (i === 0) return;
+      timers.push(setTimeout(() => setActiveStep(i), STEP_DELAY * i));
+    });
+    // Mark animation complete after last step has had time to show
+    timers.push(setTimeout(() => {
+      animationDone.current = true;
+      // If API already returned, show result now
+      if (pendingResult.current) {
+        setResult(pendingResult.current);
+        pendingResult.current = null;
+        setLoading(false);
+      }
+    }, STEP_DELAY * ANALYSIS_STEPS.length));
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
 
   const handleSimulate = useCallback(async () => {
     setLoading(true);
     setResult(null);
     setError(null);
+    pendingResult.current = null;
+    animationDone.current = false;
     try {
       const res = await fetch("/api/score", {
         method: "POST",
@@ -76,10 +144,15 @@ const LiveDemo = () => {
       });
       if (!res.ok) throw new Error("API Error");
       const data = await res.json();
-      setResult(data);
+      // If animation is done, show immediately. Otherwise, queue it.
+      if (animationDone.current) {
+        setResult(data);
+        setLoading(false);
+      } else {
+        pendingResult.current = data;
+      }
     } catch {
       setError("Could not reach AI engine. Make sure the backend is running.");
-    } finally {
       setLoading(false);
     }
   }, [form]);
@@ -102,7 +175,21 @@ const LiveDemo = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Input */}
           <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="glass-card p-6">
-            <h3 className="text-lg font-semibold mb-6">Transaction Input</h3>
+            <h3 className="text-lg font-semibold mb-4">Transaction Input</h3>
+
+            {/* Preset buttons */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              <button onClick={() => setForm(safeExample)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[hsl(152,70%,48%)]/10 text-[hsl(152,70%,48%)] border border-[hsl(152,70%,48%)]/20 hover:bg-[hsl(152,70%,48%)]/20 transition-all duration-200">
+                <ShieldCheck className="w-3.5 h-3.5" /> Load Safe Example
+              </button>
+              <button onClick={() => setForm(fraudExample)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[hsl(0,72%,55%)]/10 text-[hsl(0,72%,55%)] border border-[hsl(0,72%,55%)]/20 hover:bg-[hsl(0,72%,55%)]/20 transition-all duration-200">
+                <ShieldAlert className="w-3.5 h-3.5" /> Load Fraud Example
+              </button>
+              <button onClick={() => { setForm(defaultForm); setResult(null); setError(null); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary/50 text-muted-foreground border border-white/[0.06] hover:bg-secondary/80 transition-all duration-200">
+                <RotateCcw className="w-3.5 h-3.5" /> Reset
+              </button>
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-4">
               {([
                 ["sender", "Sender ID"], ["receiver", "Receiver ID"], ["amount", "Amount (₹)"],
@@ -124,16 +211,51 @@ const LiveDemo = () => {
             <h3 className="text-lg font-semibold mb-6">AI Analysis Result</h3>
             <AnimatePresence mode="wait">
               {loading ? (
-                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center gap-4">
-                  <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
-                  </div>
-                  <div className="text-sm text-muted-foreground">Running XGBoost + SHAP models...</div>
-                  <div className="flex gap-1">
-                    {["Feature extraction", "Behavioral profiling", "SHAP explanation"].map((s, i) => (
-                      <motion.span key={s} initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.5, duration: 0.3 }} className="text-[10px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">{s}</motion.span>
-                    ))}
+                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col justify-center gap-3 py-4">
+                  {ANALYSIS_STEPS.map((step, i) => {
+                    const isActive = i === activeStep;
+                    const isDone = i < activeStep;
+                    const isPending = i > activeStep;
+                    return (
+                      <motion.div
+                        key={step.label}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: isPending ? 0.3 : 1, x: 0 }}
+                        transition={{ delay: i * 0.05, duration: 0.35 }}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all duration-500 ${
+                          isActive
+                            ? "bg-primary/10 border-primary/30 shadow-[0_0_15px_hsl(190,95%,55%,0.1)]"
+                            : isDone
+                            ? "bg-[hsl(152,70%,48%)]/5 border-[hsl(152,70%,48%)]/20"
+                            : "bg-secondary/20 border-white/[0.04]"
+                        }`}
+                      >
+                        <span className="text-base flex-shrink-0">
+                          {isDone ? "✅" : step.icon}
+                        </span>
+                        <span className={`text-xs font-mono flex-1 ${isActive ? "text-primary" : isDone ? "text-[hsl(152,70%,48%)]" : "text-muted-foreground"}`}>
+                          {isDone ? step.done : step.label}
+                        </span>
+                        {isActive && (
+                          <motion.div
+                            className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                          />
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                  <div className="flex items-center gap-2 mt-2 px-4">
+                    <div className="flex-1 h-1 rounded-full bg-secondary/50 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-[hsl(260,70%,60%)]"
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${((activeStep + 1) / ANALYSIS_STEPS.length) * 100}%` }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground">{activeStep + 1}/{ANALYSIS_STEPS.length}</span>
                   </div>
                 </motion.div>
               ) : error ? (
@@ -156,18 +278,41 @@ const LiveDemo = () => {
                     </div>
                   </div>
 
-                  {/* SHAP feature contributions */}
+                  {/* SHAP feature contributions — waterfall style */}
                   <div>
                     <div className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wider">SHAP Feature Contributions</div>
                     <div className="flex flex-col gap-1.5">
-                      {result.risk_assessment.feature_contributions.slice(0, 5).map((c, i) => (
-                        <motion.div key={c.feature} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }} className="flex items-center gap-2 text-sm bg-secondary/30 px-3 py-1.5 rounded-lg">
-                          <span className={`font-mono text-xs font-bold min-w-[50px] ${c.contribution > 0 ? "text-[hsl(0,72%,55%)]" : "text-[hsl(152,70%,48%)]"}`}>
-                            {c.contribution > 0 ? "+" : ""}{c.contribution.toFixed(3)}
-                          </span>
-                          <span className="text-foreground/80 text-xs">{featureLabels[c.feature] || c.feature}</span>
-                        </motion.div>
-                      ))}
+                      {result.risk_assessment.feature_contributions.slice(0, 5).map((c, i) => {
+                        const maxAbsContrib = Math.max(...result.risk_assessment.feature_contributions.slice(0, 5).map(f => Math.abs(f.contribution)));
+                        const barPercent = maxAbsContrib > 0 ? (Math.abs(c.contribution) / maxAbsContrib) * 45 : 0;
+                        const isPositive = c.contribution > 0;
+                        const tooltip = featureTooltips[c.feature] || "";
+                        return (
+                          <motion.div key={c.feature} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }} className="group relative flex items-center gap-2 text-sm bg-secondary/30 px-3 py-1.5 rounded-lg">
+                            <span className={`font-mono text-xs font-bold min-w-[50px] text-right ${isPositive ? "text-[hsl(0,72%,55%)]" : "text-[hsl(152,70%,48%)]"}`}>
+                              {isPositive ? "+" : ""}{c.contribution.toFixed(3)}
+                            </span>
+                            {/* Mini waterfall bar */}
+                            <div className="flex-1 h-3 relative">
+                              <div className="absolute inset-y-0 left-1/2 w-px bg-white/10" />
+                              <motion.div
+                                className={`absolute top-0 h-full rounded-sm ${isPositive ? "bg-[hsl(0,72%,55%)]/60" : "bg-[hsl(152,70%,48%)]/60"}`}
+                                style={isPositive ? { left: "50%" } : { right: "50%" }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${barPercent}%` }}
+                                transition={{ duration: 0.6, delay: i * 0.1 }}
+                              />
+                            </div>
+                            <span className="text-foreground/80 text-xs min-w-[100px]">{featureLabels[c.feature] || c.feature}</span>
+                            {/* Tooltip */}
+                            {tooltip && (
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-[hsl(222,40%,10%)] border border-white/10 text-[10px] text-muted-foreground w-56 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-xl">
+                                {tooltip}
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   </div>
 
