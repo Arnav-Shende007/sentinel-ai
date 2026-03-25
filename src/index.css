@@ -199,23 +199,67 @@
 
 /* Print styles for Compliance Report */
 @media print {
+  /* Set explicit physical page settings to prevent arbitrary breaks */
+  @page {
+    margin: 1cm;
+  }
+
   body * {
     visibility: hidden;
   }
-  #compliance-report-modal,
-  #compliance-report-modal * {
+  #compliance-modal-wrapper,
+  #compliance-modal-wrapper * {
     visibility: visible;
   }
+  
+  /* Force the entire document to exactly 1 viewport height */
+  html, body {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #compliance-modal-wrapper {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   #compliance-report-modal {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
     background: white !important;
     color: black !important;
     border: none !important;
     box-shadow: none !important;
+    transform: none !important;
   }
+
+  /* Prevent the body from expanding past the single page */
+  #compliance-report-modal .overflow-y-auto {
+    overflow: hidden !important;
+    flex: 1 1 auto !important;
+    max-height: none !important;
+    height: auto !important;
+    display: block !important;
+  }
+
   #compliance-report-modal .print\:hidden {
     display: none !important;
   }

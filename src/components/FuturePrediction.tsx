@@ -25,7 +25,7 @@ const FuturePrediction = () => {
   if (!data) return null;
 
   return (
-    <section className="py-24 md:py-32 border-t border-white/[0.04]">
+    <section id="prediction" className="py-24 md:py-32 border-t border-white/[0.04]">
       <div className="section-container">
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Future Fraud <span className="gradient-text">Prediction</span></h2>
@@ -36,10 +36,10 @@ const FuturePrediction = () => {
           <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="glass-card p-6">
             <h4 className="text-sm font-semibold mb-4">Risk Trend & Forecast</h4>
             <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={data.trend_data}>
+              <LineChart data={data.trend_data} margin={{ top: 10, right: 10, left: 10, bottom: 15 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,30%,16%)" />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} domain={[0, 100]} />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} label={{ value: "Day", position: "insideBottom", offset: -10, fill: "hsl(215,20%,55%)", fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} domain={[0, 100]} label={{ value: "Risk Probability (%)", angle: -90, position: "insideLeft", fill: "hsl(215,20%,55%)", fontSize: 11, style: { textAnchor: 'middle' } }} />
                 <Tooltip contentStyle={{ background: "hsl(222,40%,10%)", border: "1px solid hsl(222,30%,20%)", borderRadius: 8, fontSize: 12 }} />
                 <Line type="monotone" dataKey="risk" stroke="hsl(190,95%,55%)" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="predicted" stroke="hsl(0,72%,55%)" strokeWidth={2} strokeDasharray="6 3" dot={false} />

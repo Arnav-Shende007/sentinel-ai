@@ -102,10 +102,10 @@ const Dashboard = () => {
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="glass-card p-5">
             <h4 className="text-sm font-semibold mb-4">Risk Score Distribution</h4>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={data.risk_distribution}>
+              <BarChart data={data.risk_distribution} margin={{ top: 10, right: 10, left: 10, bottom: 15 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,30%,16%)" />
-                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} />
+                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} label={{ value: "Risk Score Range", position: "insideBottom", offset: -10, fill: "hsl(215,20%,55%)", fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} label={{ value: "Txn Count", angle: -90, position: "insideLeft", fill: "hsl(215,20%,55%)", fontSize: 11, style: { textAnchor: 'middle' } }} />
                 <Tooltip contentStyle={{ background: "hsl(222,40%,10%)", border: "1px solid hsl(222,30%,20%)", borderRadius: 8, fontSize: 12 }} />
                 <Bar dataKey="count" fill="hsl(190,95%,55%)" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -115,10 +115,10 @@ const Dashboard = () => {
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="glass-card p-5">
             <h4 className="text-sm font-semibold mb-4">Transactions & Fraud Over Time</h4>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={data.time_data}>
+              <LineChart data={data.time_data} margin={{ top: 10, right: 10, left: 0, bottom: 15 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,30%,16%)" />
-                <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} interval={3} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} />
+                <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} interval={3} label={{ value: "Time of Day (Hours)", position: "insideBottom", offset: -10, fill: "hsl(215,20%,55%)", fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,55%)" }} label={{ value: "Volume", angle: -90, position: "insideLeft", fill: "hsl(215,20%,55%)", fontSize: 11, style: { textAnchor: 'middle' } }} />
                 <Tooltip contentStyle={{ background: "hsl(222,40%,10%)", border: "1px solid hsl(222,30%,20%)", borderRadius: 8, fontSize: 12 }} />
                 <Line type="monotone" dataKey="transactions" stroke="hsl(190,95%,55%)" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="frauds" stroke="hsl(0,72%,55%)" strokeWidth={2} dot={false} />

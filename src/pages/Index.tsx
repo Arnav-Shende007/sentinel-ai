@@ -3,7 +3,9 @@ import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import Architecture from "@/components/Architecture";
 import LiveDemo from "@/components/LiveDemo";
+import RulesVsAI from "@/components/RulesVsAI";
 import Dashboard from "@/components/Dashboard";
+import BatchProcessing from "@/components/BatchProcessing";
 import FraudNetwork from "@/components/FraudNetwork";
 import AIModels from "@/components/AIModels";
 import ExplainableAI from "@/components/ExplainableAI";
@@ -34,7 +36,9 @@ const Index = () => (
     <Features />
     <Architecture />
     <LiveDemo />
+    <RulesVsAI />
     <Dashboard />
+    <BatchProcessing />
     <FraudNetwork />
     <AIModels />
     <ExplainableAI />

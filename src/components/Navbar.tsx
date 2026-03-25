@@ -4,10 +4,14 @@ import { Shield, Menu, X } from "lucide-react";
 
 const links = [
   { label: "Features", href: "#features" },
-  { label: "Demo", href: "#demo" },
-  { label: "Dashboard", href: "#dashboard" },
+  { label: "Rules vs AI", href: "#rules-vs-ai" },
+  { label: "Batch Scan", href: "#batch-scan" },
+  { label: "Fraud Ring", href: "#fraud-network" },
   { label: "Models", href: "#models" },
-  { label: "Team", href: "#team" },
+  { label: "XAI", href: "#explainable-ai" },
+  { label: "Prediction", href: "#prediction" },
+  { label: "Alerts", href: "#alerts" },
+  { label: "Metrics", href: "#metrics" },
 ];
 
 const Navbar = () => {
@@ -35,12 +39,12 @@ const Navbar = () => {
           <span>FraudShield</span>
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-4 xl:gap-6">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+              className="text-xs xl:text-sm text-muted-foreground hover:text-foreground transition-colors duration-300 whitespace-nowrap"
             >
               {l.label}
             </a>

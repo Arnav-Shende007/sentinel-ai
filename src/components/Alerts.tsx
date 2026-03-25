@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Mail, MessageSquare, CheckCircle2, AlertTriangle, FileBarChart } from "lucide-react";
+import { Bell, Mail, MessageSquare, CheckCircle2, AlertTriangle, FileBarChart, AlertCircle } from "lucide-react";
 import ComplianceReportModal from "./ComplianceReportModal";
 
 interface Alert {
@@ -36,7 +36,7 @@ const Alerts = () => {
   };
 
   return (
-    <section className="py-24 md:py-32 border-t border-white/[0.04]">
+    <section id="alerts" className="py-24 md:py-32 border-t border-white/[0.04]">
       <div className="section-container">
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Alert & <span className="gradient-text">Notification</span> System</h2>
@@ -48,21 +48,36 @@ const Alerts = () => {
           {alertChannels.map((a, i) => {
             const latestAlert = alerts[i];
             return (
-              <motion.div key={a.channel} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }} className="glass-card p-6 text-center">
-                <div className="p-3 rounded-lg bg-primary/10 text-primary w-fit mx-auto mb-4"><a.icon className="w-6 h-6" /></div>
-                <h4 className="font-semibold mb-2">{a.label}</h4>
-                <p className="text-xs text-muted-foreground mb-4">
-                  {latestAlert ? `⚠️ ${latestAlert.description.slice(0, 60)}...` : "No recent alerts"}
-                </p>
-                <button onClick={() => handleSend(a.channel)} disabled={sent.includes(a.channel)} className="btn-outline text-xs px-4 py-2 w-full disabled:opacity-50">
-                  <AnimatePresence mode="wait">
-                    {sent.includes(a.channel) ? (
-                      <motion.span key="sent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-1.5 text-[hsl(152,70%,48%)]"><CheckCircle2 className="w-3.5 h-3.5" /> Sent!</motion.span>
-                    ) : (
-                      <motion.span key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Simulate {a.channel}</motion.span>
-                    )}
-                  </AnimatePresence>
-                </button>
+              <motion.div key={a.channel} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }} className="glass-card p-6 flex flex-col h-full bg-secondary/10 hover:bg-secondary/40 transition-colors border border-white/[0.04]">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0"><a.icon className="w-5 h-5 shadow-[0_0_15px_hsl(190,95%,55%,0.2)]" /></div>
+                  <h4 className="font-semibold text-left">{a.label}</h4>
+                </div>
+                
+                <div className="flex-grow mb-5 text-left text-xs bg-black/30 rounded-lg p-3.5 border border-white/[0.03]">
+                  {latestAlert ? (
+                    <div className="flex gap-2 items-start">
+                      <AlertCircle className="w-3.5 h-3.5 text-[hsl(38,92%,55%)] shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground leading-relaxed">
+                        {latestAlert.description.slice(0, 65)}...
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground italic pl-1">No recent alerts.</span>
+                  )}
+                </div>
+
+                <div className="mt-auto">
+                  <button onClick={() => handleSend(a.channel)} disabled={sent.includes(a.channel)} className="w-full py-2.5 rounded-md text-xs font-semibold border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
+                    <AnimatePresence mode="wait">
+                      {sent.includes(a.channel) ? (
+                        <motion.span key="sent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-1.5 text-[hsl(152,70%,48%)]"><CheckCircle2 className="w-3.5 h-3.5" /> Sent!</motion.span>
+                      ) : (
+                        <motion.span key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Simulate {a.channel}</motion.span>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                </div>
               </motion.div>
             );
           })}

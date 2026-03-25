@@ -34,13 +34,13 @@ const ComplianceReportModal = ({ open, onClose, alerts }: Props) => {
   return (
     <AnimatePresence>
       {open && (
-        <>
+        <div id="compliance-modal-wrapper" className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto"
             onClick={onClose}
           />
           {/* Modal */}
@@ -49,11 +49,11 @@ const ComplianceReportModal = ({ open, onClose, alerts }: Props) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[720px] md:max-h-[85vh] bg-[hsl(222,40%,8%)] border border-white/[0.08] rounded-2xl z-50 overflow-auto shadow-2xl"
+            className="relative w-full max-w-4xl max-h-full bg-[hsl(222,40%,8%)] border border-white/[0.08] rounded-2xl shadow-2xl flex flex-col pointer-events-auto"
             id="compliance-report-modal"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-[hsl(222,40%,8%)]/95 backdrop-blur-sm border-b border-white/[0.06] px-6 py-4 flex items-center justify-between z-10">
+            <div className="bg-[hsl(222,40%,8%)]/95 backdrop-blur-sm border-b border-white/[0.06] px-6 py-4 flex items-center justify-between shrink-0 z-10">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-[hsl(0,72%,55%)]/10">
                   <Shield className="w-5 h-5 text-[hsl(0,72%,55%)]" />
@@ -74,7 +74,7 @@ const ComplianceReportModal = ({ open, onClose, alerts }: Props) => {
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto min-h-0">
               {/* Report metadata */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-secondary/30 rounded-lg p-3 border border-white/[0.04]">
@@ -185,7 +185,7 @@ const ComplianceReportModal = ({ open, onClose, alerts }: Props) => {
               </div>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
