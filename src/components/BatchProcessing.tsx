@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Loader2, ShieldAlert, CheckCircle2, Zap, BarChart3, Clock, XCircle } from "lucide-react";
+import { Upload, Loader2, ShieldAlert, CheckCircle2, Zap, BarChart3, Clock, XCircle, FileText, Download, X } from "lucide-react";
 
 interface BlockedTransaction {
   transaction_id: string;
@@ -30,6 +30,20 @@ const SCAN_STEPS = [
 
 const STEP_DELAY = 500;
 
+const EXPECTED_COLUMNS = [
+  { name: "sender_id", required: true },
+  { name: "receiver_id", required: true },
+  { name: "amount", required: true },
+  { name: "hour", required: false },
+  { name: "day_of_week", required: false },
+  { name: "device_changed", required: false },
+  { name: "is_new_recipient", required: false },
+  { name: "txn_lat", required: false },
+  { name: "txn_lon", required: false },
+  { name: "sender_home_lat", required: false },
+  { name: "sender_home_lon", required: false },
+];
+
 const BatchProcessing = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
@@ -39,7 +53,13 @@ const BatchProcessing = () => {
   const pendingResult = useRef<BatchResult | null>(null);
   const animationDone = useRef(false);
 
-  const totalCount = 500;
+  // CSV file upload state
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const totalCount = csvFile ? 0 : 500; // for CSV uploads we don't know count upfront
+  const [displayTotal, setDisplayTotal] = useState(500);
 
   // Drive step-by-step animation
   useEffect(() => {
@@ -57,10 +77,11 @@ const BatchProcessing = () => {
     });
 
     // Counter animation
+    const target = displayTotal || 500;
     const counterInterval = setInterval(() => {
       setProcessedCount((prev) => {
         const next = prev + Math.floor(Math.random() * 30 + 15);
-        return next >= totalCount ? totalCount : next;
+        return next >= target ? target : next;
       });
     }, 60);
     timers.push(setTimeout(() => clearInterval(counterInterval), STEP_DELAY * SCAN_STEPS.length) as unknown as ReturnType<typeof setTimeout>);
@@ -69,9 +90,11 @@ const BatchProcessing = () => {
     timers.push(
       setTimeout(() => {
         animationDone.current = true;
-        setProcessedCount(totalCount);
+        setProcessedCount(target);
         if (pendingResult.current) {
           setResult(pendingResult.current);
+          setDisplayTotal(pendingResult.current.total_processed);
+          setProcessedCount(pendingResult.current.total_processed);
           pendingResult.current = null;
           setLoading(false);
         }
@@ -82,9 +105,51 @@ const BatchProcessing = () => {
       timers.forEach(clearTimeout);
       clearInterval(counterInterval);
     };
-  }, [loading]);
+  }, [loading, displayTotal]);
 
-  const handleScan = useCallback(async () => {
+  // CSV upload scan
+  const handleCsvScan = useCallback(async () => {
+    if (!csvFile) return;
+    setLoading(true);
+    setResult(null);
+    setError(null);
+    pendingResult.current = null;
+    animationDone.current = false;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", csvFile);
+
+      const res = await fetch("/api/batch-scan-csv", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ detail: "Upload failed" }));
+        throw new Error(errData.detail || "API Error");
+      }
+
+      const data = await res.json();
+      setDisplayTotal(data.total_processed);
+
+      if (animationDone.current) {
+        setResult(data);
+        setProcessedCount(data.total_processed);
+        setLoading(false);
+      } else {
+        pendingResult.current = data;
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Could not reach AI engine.";
+      setError(msg);
+      setLoading(false);
+    }
+  }, [csvFile]);
+
+  // Simulated scan (existing behavior)
+  const handleSimulatedScan = useCallback(async () => {
+    setDisplayTotal(500);
     setLoading(true);
     setResult(null);
     setError(null);
@@ -95,7 +160,7 @@ const BatchProcessing = () => {
       const res = await fetch("/api/batch-scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: totalCount }),
+        body: JSON.stringify({ count: 500 }),
       });
       if (!res.ok) throw new Error("API Error");
       const data = await res.json();
@@ -112,6 +177,49 @@ const BatchProcessing = () => {
     }
   }, []);
 
+  // Drag-and-drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].name.toLowerCase().endsWith(".csv")) {
+      setCsvFile(files[0]);
+      setResult(null);
+      setError(null);
+    } else {
+      setError("Please drop a valid .csv file.");
+    }
+  }, []);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setCsvFile(files[0]);
+      setResult(null);
+      setError(null);
+    }
+  }, []);
+
+  const clearFile = useCallback(() => {
+    setCsvFile(null);
+    setResult(null);
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
   return (
     <section id="batch-scan" className="py-24 md:py-32 border-t border-white/[0.04]">
       <div className="section-container">
@@ -126,15 +234,105 @@ const BatchProcessing = () => {
             Bulk CSV <span className="gradient-text">Scanner</span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Enterprise-grade batch processing — upload a daily batch and watch the AI engine
-            score 500+ transactions instantly.
+            Upload your transaction CSV or run a simulated batch — the AI engine scores
+            every row through XGBoost + behavioral profiling in real time.
           </p>
         </motion.div>
 
-        {/* Action button */}
-        <div className="flex justify-center mb-8">
+        {/* CSV Drop Zone */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="max-w-2xl mx-auto mb-8"
+        >
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => !loading && fileInputRef.current?.click()}
+            className={`relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer group ${
+              isDragOver
+                ? "border-primary bg-primary/[0.06] shadow-[0_0_30px_hsl(190,95%,55%,0.1)]"
+                : csvFile
+                ? "border-[hsl(152,70%,48%)]/40 bg-[hsl(152,70%,48%)]/[0.04]"
+                : "border-white/[0.08] bg-secondary/20 hover:border-primary/30 hover:bg-primary/[0.02]"
+            } ${loading ? "pointer-events-none opacity-60" : ""}`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {csvFile ? (
+              <div className="flex items-center gap-4 p-5">
+                <div className="w-10 h-10 rounded-lg bg-[hsl(152,70%,48%)]/10 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-[hsl(152,70%,48%)]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{csvFile.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {(csvFile.size / 1024).toFixed(1)} KB — Ready to scan
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); clearFile(); }}
+                  className="p-1.5 rounded-md hover:bg-white/[0.06] transition-colors"
+                >
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3 p-8">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  isDragOver
+                    ? "bg-primary/20 scale-110"
+                    : "bg-secondary/40 group-hover:bg-primary/10"
+                }`}>
+                  <Upload className={`w-6 h-6 transition-colors duration-300 ${
+                    isDragOver ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                  }`} />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium mb-1">
+                    {isDragOver ? "Drop your CSV here" : "Drag & drop your CSV file here"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    or click to browse · Max 5,000 rows
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Expected columns helper + Download sample */}
+          <div className="flex items-start justify-between mt-3 gap-4">
+            <div className="text-[10px] text-muted-foreground/60 leading-relaxed flex-1">
+              <span className="font-semibold text-muted-foreground/80">Required:</span>{" "}
+              {EXPECTED_COLUMNS.filter(c => c.required).map(c => c.name).join(", ")}
+              <span className="mx-1.5">·</span>
+              <span className="font-semibold text-muted-foreground/80">Optional:</span>{" "}
+              {EXPECTED_COLUMNS.filter(c => !c.required).map(c => c.name).join(", ")}
+            </div>
+            <a
+              href="/sample_transactions.csv"
+              download="sample_transactions.csv"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 text-[10px] text-primary hover:text-primary/80 font-semibold transition-colors flex-shrink-0 mt-0.5"
+            >
+              <Download className="w-3 h-3" /> Download Sample CSV
+            </a>
+          </div>
+        </motion.div>
+
+        {/* Action buttons */}
+        <div className="flex justify-center gap-3 mb-8">
           <button
-            onClick={handleScan}
+            onClick={csvFile ? handleCsvScan : handleSimulatedScan}
             disabled={loading}
             className="btn-primary text-sm px-8 py-3 disabled:opacity-50"
           >
@@ -142,9 +340,13 @@ const BatchProcessing = () => {
               <>
                 <Loader2 className="w-4 h-4 animate-spin" /> Processing Batch...
               </>
+            ) : csvFile ? (
+              <>
+                <Zap className="w-4 h-4" /> Scan Uploaded CSV
+              </>
             ) : (
               <>
-                <Upload className="w-4 h-4" /> Upload Daily Batch (Simulated CSV)
+                <Upload className="w-4 h-4" /> Run Simulated Batch (500 Txns)
               </>
             )}
           </button>
@@ -162,9 +364,11 @@ const BatchProcessing = () => {
               {/* Progress bar */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono text-muted-foreground">Processing transactions...</span>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {csvFile ? `Scoring ${csvFile.name}...` : "Processing transactions..."}
+                  </span>
                   <span className="text-xs font-mono text-primary font-bold">
-                    {processedCount}/{totalCount}
+                    {csvFile ? (processedCount > 0 ? `${processedCount} rows` : "...") : `${processedCount}/${displayTotal}`}
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-secondary/50 overflow-hidden">
@@ -172,7 +376,7 @@ const BatchProcessing = () => {
                     className="h-full rounded-full bg-gradient-to-r from-primary via-[hsl(260,70%,60%)] to-primary"
                     style={{ backgroundSize: "200% 100%" }}
                     animate={{
-                      width: `${(processedCount / totalCount) * 100}%`,
+                      width: csvFile ? `${((activeStep + 1) / SCAN_STEPS.length) * 100}%` : `${(processedCount / (displayTotal || 500)) * 100}%`,
                       backgroundPosition: ["0% 0%", "100% 0%"],
                     }}
                     transition={{
@@ -347,7 +551,7 @@ const BatchProcessing = () => {
             >
               <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
               <p className="text-muted-foreground text-sm">
-                Click "Upload Daily Batch" to simulate processing 500 transactions through the AI pipeline.
+                Drop a CSV above or click "Run Simulated Batch" to process transactions through the AI pipeline.
               </p>
             </motion.div>
           )}

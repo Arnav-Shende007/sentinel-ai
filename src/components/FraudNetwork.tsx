@@ -196,7 +196,7 @@ const FraudNetwork = () => {
                     const isFraud = detected && n.fraud;
                     const isMule = detected && n.mule;
                     const isSelected = selectedNode === n.id;
-                    const fill = isFraud ? "hsl(0,72%,55%)" : isMule ? "hsl(38,92%,55%)" : "hsl(190,95%,55%)";
+                    const fill = isMule ? "hsl(38,92%,55%)" : isFraud ? "hsl(0,72%,55%)" : "hsl(190,95%,55%)";
                     const r = isSelected ? 2.8 : hoveredNode === n.id ? 2.2 : isFraud || isMule ? 1.8 : viewMode === "global" && !n.fraud && !n.mule ? 0.8 : 1.2;
                     const isClickable = detected && (n.fraud || n.mule);
                     return (

@@ -30,29 +30,29 @@ interface ScoreResult {
 }
 
 const defaultForm = {
-  sender: "UPI-1000000001",
-  receiver: "UPI-1000000002",
+  sender: "9820145892@ybl",
+  receiver: "7356201489@okaxis",
   amount: "24500",
   time: "02:30",
-  device: "New Android",
+  device: "New Galaxy S23 Ultra",
   location: "Mumbai",
 };
 
 const safeExample = {
-  sender: "UPI-1000000012",
-  receiver: "UPI-1000000008",
+  sender: "8451023967@oksbi",
+  receiver: "7012356891@paytm",
   amount: "350",
   time: "14:15",
-  device: "Trusted iPhone",
-  location: "Bangalore",
+  device: "iPhone 14 Pro",
+  location: "Mumbai",
 };
 
 const fraudExample = {
-  sender: "UPI-1000000047",
-  receiver: "UPI-1000000099",
+  sender: "6539874021@ibl",
+  receiver: "9471058326@upi",
   amount: "49800",
   time: "03:12",
-  device: "New Android",
+  device: "New Redmi Note 13 Pro",
   location: "Unknown VPN",
 };
 
@@ -222,13 +222,12 @@ const LiveDemo = () => {
                         initial={{ opacity: 0, x: -12 }}
                         animate={{ opacity: isPending ? 0.3 : 1, x: 0 }}
                         transition={{ delay: i * 0.05, duration: 0.35 }}
-                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all duration-500 ${
-                          isActive
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all duration-500 ${isActive
                             ? "bg-primary/10 border-primary/30 shadow-[0_0_15px_hsl(190,95%,55%,0.1)]"
                             : isDone
-                            ? "bg-[hsl(152,70%,48%)]/5 border-[hsl(152,70%,48%)]/20"
-                            : "bg-secondary/20 border-white/[0.04]"
-                        }`}
+                              ? "bg-[hsl(152,70%,48%)]/5 border-[hsl(152,70%,48%)]/20"
+                              : "bg-secondary/20 border-white/[0.04]"
+                          }`}
                       >
                         <span className="text-base flex-shrink-0">
                           {isDone ? "✅" : step.icon}

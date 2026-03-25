@@ -27,7 +27,21 @@ CITIES = {
     "Lucknow": (26.8467, 80.9462),
 }
 
-DEVICES = ["Android", "iOS", "Web"]
+DEVICES = [
+    "iPhone 14 Pro", "iPhone 15", "Galaxy S23 Ultra", "Galaxy A54",
+    "OnePlus 11", "Pixel 8 Pro", "Redmi Note 13 Pro",
+    "Chrome/Windows 11", "Safari/MacOS", "Edge/Windows 11",
+]
+
+UPI_SUFFIXES = ["@ybl", "@okaxis", "@oksbi", "@paytm", "@ibl", "@upi"]
+
+
+def _random_upi_id():
+    """Generate a realistic Indian phone-number-based UPI handle."""
+    prefix = str(np.random.choice([6, 7, 8, 9]))
+    digits = "".join([str(np.random.randint(0, 10)) for _ in range(9)])
+    suffix = np.random.choice(UPI_SUFFIXES)
+    return f"{prefix}{digits}{suffix}"
 
 
 def generate_users(n: int) -> pd.DataFrame:
@@ -37,7 +51,7 @@ def generate_users(n: int) -> pd.DataFrame:
         city = city_names[i % len(city_names)]
         lat, lon = CITIES[city]
         users.append({
-            "user_id": f"UPI-{1000000000 + i}",
+            "user_id": _random_upi_id(),
             "home_city": city,
             "home_lat": lat + np.random.normal(0, 0.02),
             "home_lon": lon + np.random.normal(0, 0.02),
@@ -101,7 +115,7 @@ def generate_transactions(users: pd.DataFrame, n: int) -> pd.DataFrame:
         txn_lon = sender["home_lon"] + np.random.normal(0, 0.05)
 
         txns.append({
-            "transaction_id": f"TXN{100000 + i}",
+            "transaction_id": f"{np.random.randint(100000, 999999)}{np.random.randint(100000, 999999)}",
             "sender_id": sender_id,
             "receiver_id": receiver_id,
             "amount": round(float(amount), 2),

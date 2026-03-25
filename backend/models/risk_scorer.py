@@ -89,6 +89,20 @@ class RiskScorer:
         print(f"Risk Scorer trained — ROC-AUC: {self.metrics['roc_auc']:.4f}, F1: {self.metrics['f1_score']:.4f}")
         return self.metrics
 
+    def predict_risk_probabilities(self, X, temperature=2.5):
+        """Apply temperature scaling to soften extreme XGBoost probabilities.
+
+        Converts raw probabilities → logits, divides by temperature T,
+        then maps back to probabilities. This compresses extremes toward
+        mid-range while preserving exact rank ordering.
+        """
+        raw_probs = self.model.predict_proba(X)[:, 1]
+        eps = 1e-7
+        clamped = np.clip(raw_probs, eps, 1 - eps)
+        logits = np.log(clamped / (1 - clamped))
+        scaled_logits = logits / temperature
+        return 1 / (1 + np.exp(-scaled_logits))
+
     def load(self):
         """Load a pre-trained model from disk."""
         if os.path.exists(self._model_path):
@@ -113,7 +127,7 @@ class RiskScorer:
             if X[col].dtype == bool:
                 X[col] = X[col].astype(int)
 
-        fraud_prob = float(self.model.predict_proba(X)[:, 1][0])
+        fraud_prob = float(self.predict_risk_probabilities(X)[0])
         risk_score = int(fraud_prob * 100)
 
         # Risk category
