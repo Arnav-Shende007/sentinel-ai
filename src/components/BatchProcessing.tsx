@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Loader2, ShieldAlert, CheckCircle2, Zap, BarChart3, Clock, XCircle, FileText, Download, X } from "lucide-react";
+import { Upload, Loader2, ShieldAlert, CheckCircle2, Zap, BarChart3, Clock, XCircle, FileText, Download, X, ChevronDown, TrendingUp, AlertTriangle, ArrowRight } from "lucide-react";
 
 interface BlockedTransaction {
   transaction_id: string;
@@ -51,6 +51,7 @@ const BatchProcessing = () => {
   const [activeStep, setActiveStep] = useState(-1);
   const [processedCount, setProcessedCount] = useState(0);
   const pendingResult = useRef<BatchResult | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const animationDone = useRef(false);
 
   // CSV file upload state
@@ -489,54 +490,104 @@ const BatchProcessing = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {result.blocked_transactions.map((txn, i) => (
-                        <motion.tr
-                          key={txn.transaction_id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.4 + i * 0.03 }}
-                          className={`border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${
-                            txn.risk_score >= 90
-                              ? "bg-[hsl(0,72%,55%)]/[0.04]"
-                              : ""
-                          }`}
-                        >
-                          <td className="py-2.5 font-mono text-xs">{txn.transaction_id}</td>
-                          <td className="py-2.5 text-xs">
-                            <span className="font-mono">{txn.sender}</span>
-                            <span className="text-muted-foreground mx-1">→</span>
-                            <span className="font-mono">{txn.receiver}</span>
-                          </td>
-                          <td className="py-2.5 font-mono text-xs">₹{txn.amount.toLocaleString()}</td>
-                          <td className="py-2.5">
-                            <span
-                              className={`font-mono font-bold text-xs ${
-                                txn.risk_score >= 90
-                                  ? "text-[hsl(0,72%,55%)]"
-                                  : txn.risk_score >= 80
-                                  ? "text-[hsl(0,72%,55%)]"
-                                  : "text-[hsl(38,92%,55%)]"
+                      {result.blocked_transactions.map((txn, i) => {
+                        const isExpanded = expandedId === txn.transaction_id;
+                        const reasons = txn.reason.split(" | ");
+                        return (
+                          <>
+                            <motion.tr
+                              key={txn.transaction_id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.4 + i * 0.03 }}
+                              onClick={() => setExpandedId(isExpanded ? null : txn.transaction_id)}
+                              className={`border-b border-white/[0.03] cursor-pointer transition-colors ${
+                                isExpanded ? "bg-primary/[0.06]" : txn.risk_score >= 90 ? "bg-[hsl(0,72%,55%)]/[0.04] hover:bg-white/[0.03]" : "hover:bg-white/[0.02]"
                               }`}
                             >
-                              {txn.risk_score}
-                            </span>
-                          </td>
-                          <td className="py-2.5 text-xs text-muted-foreground max-w-[250px] truncate">
-                            {txn.reason}
-                          </td>
-                          <td className="py-2.5">
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                                txn.decision === "BLOCK"
-                                  ? "bg-destructive/20 text-destructive border border-destructive/20"
-                                  : "bg-[hsl(38,92%,55%)]/20 text-[hsl(38,92%,55%)] border border-[hsl(38,92%,55%)]/20"
-                              }`}
-                            >
-                              {txn.decision}
-                            </span>
-                          </td>
-                        </motion.tr>
-                      ))}
+                              <td className="py-2.5 font-mono text-xs">{txn.transaction_id}</td>
+                              <td className="py-2.5 text-xs">
+                                <span className="font-mono">{txn.sender}</span>
+                                <span className="text-muted-foreground mx-1">→</span>
+                                <span className="font-mono">{txn.receiver}</span>
+                              </td>
+                              <td className="py-2.5 font-mono text-xs">₹{txn.amount.toLocaleString()}</td>
+                              <td className="py-2.5">
+                                <span className={`font-mono font-bold text-xs ${txn.risk_score >= 80 ? "text-[hsl(0,72%,55%)]" : "text-[hsl(38,92%,55%)]"}`}>{txn.risk_score}</span>
+                              </td>
+                              <td className="py-2.5 text-xs text-muted-foreground max-w-[250px] truncate">{txn.reason}</td>
+                              <td className="py-2.5">
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${txn.decision === "BLOCK" ? "bg-destructive/20 text-destructive border border-destructive/20" : "bg-[hsl(38,92%,55%)]/20 text-[hsl(38,92%,55%)] border border-[hsl(38,92%,55%)]/20"}`}>{txn.decision}</span>
+                                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                                </div>
+                              </td>
+                            </motion.tr>
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.tr key={`${txn.transaction_id}-detail`} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}>
+                                  <td colSpan={6} className="p-0">
+                                    <div className="p-4 bg-white/[0.02] border-b border-primary/10">
+                                      <div className="grid md:grid-cols-3 gap-4">
+                                        {/* Risk Gauge */}
+                                        <div className="bg-black/20 rounded-xl p-4 border border-white/[0.04]">
+                                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-semibold">Risk Assessment</div>
+                                          <div className="flex items-end gap-2 mb-2">
+                                            <span className={`text-3xl font-bold font-mono ${txn.risk_score >= 80 ? "text-red-400" : "text-amber-400"}`}>{txn.risk_score}</span>
+                                            <span className="text-xs text-muted-foreground mb-1">/ 100</span>
+                                          </div>
+                                          <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden mb-3">
+                                            <motion.div initial={{ width: 0 }} animate={{ width: `${txn.risk_score}%` }} transition={{ duration: 0.6, ease: "easeOut" }} className="h-full rounded-full" style={{ background: txn.risk_score >= 80 ? "linear-gradient(90deg, #ef4444, #dc2626)" : "linear-gradient(90deg, #f59e0b, #d97706)", boxShadow: txn.risk_score >= 80 ? "0 0 10px rgba(239,68,68,0.4)" : "0 0 10px rgba(245,158,11,0.3)" }} />
+                                          </div>
+                                          {txn.anomaly_score > 0 && (
+                                            <div className="flex items-center gap-1.5 text-xs">
+                                              <AlertTriangle className="w-3 h-3 text-amber-400" />
+                                              <span className="text-muted-foreground">Behavioral Anomaly: <span className="text-amber-400 font-semibold">{txn.anomaly_score}σ</span></span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {/* AI Reasoning */}
+                                        <div className="bg-black/20 rounded-xl p-4 border border-white/[0.04]">
+                                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-semibold flex items-center gap-1"><Zap className="w-3 h-3 text-amber-400" /> Why Flagged</div>
+                                          <div className="space-y-1.5">
+                                            {reasons.map((r, ri) => (
+                                              <div key={ri} className="flex items-start gap-2 text-xs">
+                                                <TrendingUp className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                                                <span className="text-muted-foreground leading-relaxed">{r}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        {/* Transaction Flow */}
+                                        <div className="bg-black/20 rounded-xl p-4 border border-white/[0.04]">
+                                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-semibold">Transaction Flow</div>
+                                          <div className="flex items-center gap-2 mb-3">
+                                            <div className="flex-1 text-center p-2 bg-white/[0.03] rounded-lg">
+                                              <div className="text-[9px] text-muted-foreground mb-0.5">FROM</div>
+                                              <div className="text-[10px] font-mono font-semibold truncate">{txn.sender}</div>
+                                            </div>
+                                            <ArrowRight className="w-4 h-4 text-red-400 shrink-0" />
+                                            <div className="flex-1 text-center p-2 bg-white/[0.03] rounded-lg">
+                                              <div className="text-[9px] text-muted-foreground mb-0.5">TO</div>
+                                              <div className="text-[10px] font-mono font-semibold truncate">{txn.receiver}</div>
+                                            </div>
+                                          </div>
+                                          <div className="text-center">
+                                            <span className="text-lg font-bold text-red-400 font-mono">₹{txn.amount.toLocaleString()}</span>
+                                          </div>
+                                          <div className="mt-2 text-center">
+                                            <span className={`text-[10px] px-3 py-1 rounded-full font-bold ${txn.decision === "BLOCK" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"}`}>{txn.decision === "BLOCK" ? "⛔ BLOCKED" : "⚠️ FLAGGED"}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </motion.tr>
+                              )}
+                            </AnimatePresence>
+                          </>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </motion.div>

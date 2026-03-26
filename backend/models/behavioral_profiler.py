@@ -53,19 +53,33 @@ class BehavioralProfiler:
         )
         self.isolation_forest.fit(agg)
 
+        # Build global baseline for cold-start profiling
+        self.global_profile = {
+            "amount_mean": float(df["amount"].mean()),
+            "amount_std": float(df["amount"].std()),
+            "amount_median": float(df["amount"].median()),
+            "typical_hour_mean": float(df["hour"].mean()),
+            "typical_hour_std": float(df["hour"].std()) if float(df["hour"].std()) > 0 else 4.0,
+            "avg_geo_distance": float(df["geo_distance_km"].mean()),
+            "geo_std": float(df["geo_distance_km"].std()) if float(df["geo_distance_km"].std()) > 0 else 5.0,
+            "avg_daily_txns": float(df["txn_count_daily"].mean()),
+            "txn_count": 0,
+            "frequent_recipients": [],
+            "primary_device": df["device"].mode().iloc[0] if not df.empty else "Android",
+            "fraud_rate": float(df["is_fraud"].mean()),
+        }
+
         print(f"Behavioral profiles built for {len(self.user_profiles)} users")
 
     def analyze_transaction(self, txn: dict) -> dict:
-        """Analyze a transaction against the sender's behavioral profile."""
+        """Analyze a transaction against the sender's behavioral profile or global baseline."""
         sender_id = txn.get("sender_id", "")
         profile = self.user_profiles.get(sender_id)
+        is_global = False
 
         if profile is None:
-            return {
-                "anomaly_score": 0.5,
-                "profile_exists": False,
-                "deviations": [{"factor": "unknown_user", "detail": "No behavioral profile exists for this user"}],
-            }
+            profile = self.global_profile
+            is_global = True
 
         deviations = []
         anomaly_score = 0.0
@@ -116,7 +130,7 @@ class BehavioralProfiler:
 
         # New recipient check
         receiver_id = txn.get("receiver_id", "")
-        if receiver_id and receiver_id not in profile.get("frequent_recipients", []):
+        if not is_global and receiver_id and receiver_id not in profile.get("frequent_recipients", []):
             if txn.get("is_new_recipient"):
                 deviations.append({
                     "factor": "new_recipient",
@@ -128,7 +142,7 @@ class BehavioralProfiler:
         if txn.get("device_changed"):
             deviations.append({
                 "factor": "device_change",
-                "detail": f"Device changed from {profile['primary_device']} to {txn.get('device', 'unknown')}",
+                "detail": f"Suspicious or unrecognized device fingerprint: {txn.get('device', 'unknown')}",
             })
             anomaly_score += 0.15
 
@@ -137,17 +151,17 @@ class BehavioralProfiler:
         if not deviations:
             deviations.append({
                 "factor": "normal",
-                "detail": "Transaction is within normal behavioral parameters",
+                "detail": "Transaction matches typical network behavioral patterns" if is_global else "Transaction is within normal behavioral parameters",
             })
 
         return {
             "anomaly_score": round(anomaly_score, 4),
-            "profile_exists": True,
+            "profile_exists": not is_global,
             "deviations": deviations,
             "user_profile_summary": {
                 "typical_amount": f"₹{profile['amount_mean']:,.0f} ± ₹{profile['amount_std']:,.0f}",
                 "typical_hours": f"{profile['typical_hour_mean']:.0f}:00 - {profile['typical_hour_mean'] + profile['typical_hour_std']:.0f}:00",
-                "total_transactions": profile["txn_count"],
+                "total_transactions": profile["txn_count"] if not is_global else "Network Average",
                 "historical_fraud_rate": f"{profile['fraud_rate']:.2%}",
             },
         }

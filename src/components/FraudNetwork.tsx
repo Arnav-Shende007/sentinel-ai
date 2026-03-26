@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Loader2, Globe, Target, X, ArrowDownLeft, ArrowUpRight, Network, Fingerprint, BarChart3 } from "lucide-react";
+import { Search, Loader2, Globe, Target, X, ArrowDownLeft, ArrowUpRight, Network, Fingerprint, BarChart3, ShieldAlert } from "lucide-react";
 
 interface GraphNode { id: string; x: number; y: number; fraud: boolean; mule: boolean; mule_score: number; community: number; }
 interface GraphEdge { from: string; to: string; fraud: boolean; weight: number; }
@@ -380,6 +380,65 @@ const FraudNetwork = () => {
                             </div>
                           </div>
                         )}
+
+                        {/* Reasoning & Countermeasures */}
+                        {(() => {
+                          const getInsightAndAction = (node: NodeDetail) => {
+                            if (node.in_degree >= node.out_degree * 1.5 && node.total_money_in > 5000) {
+                              return {
+                                reasoning: "Acts as a collector node, aggregating suspected funds from multiple distributed sources.",
+                                action: "Suspend inbound transfers and initiate source-of-funds verification."
+                              };
+                            }
+                            if (node.out_degree >= node.in_degree * 1.5 && node.total_money_out > 5000) {
+                              return {
+                                reasoning: "Acts as a distributor node, rapidly dispersing illicit funds to multiple downstream mule accounts.",
+                                action: "Immediate account freeze. Restrict outbound transfers and report to FIU."
+                              };
+                            }
+                            if (node.total_money_in > 15000 && node.total_money_out > 15000 && node.mule_score > 0.5) {
+                              return {
+                                reasoning: "Extremely high balanced throughput matching 'washer' money mule typologies for fund layering.",
+                                action: "Trigger Enhanced Due Diligence (EDD) and hold pending transactions."
+                              };
+                            }
+                            if (node.in_cycle) {
+                              return {
+                                reasoning: "Detected participating in a closed-loop circular money flow characteristic of layering.",
+                                action: `Block all cross-transfers within Community C${String(node.community).padStart(3, '0')}.`
+                              };
+                            }
+                            if (node.is_mule) {
+                              return {
+                                reasoning: "Displays high structural centrality and PageRank within a known fraudulent community.",
+                                action: "Require mandatory Video KYC re-verification for next login attempt."
+                              };
+                            }
+                            return {
+                              reasoning: "High transaction velocity and direct proximity to known bad actors in the graph.",
+                              action: "Flag account for prioritized manual review by risk operations."
+                            };
+                          };
+                          const insight = getInsightAndAction(nodeDetail);
+                          return (
+                            <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 mt-4 relative overflow-hidden">
+                              <div className="absolute top-0 left-0 w-1 h-full bg-destructive/60" />
+                              <div className="text-[10px] font-bold text-destructive uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <ShieldAlert className="w-3.5 h-3.5" /> Insight & Action
+                              </div>
+                              <div className="space-y-3 text-xs text-muted-foreground">
+                                <div>
+                                  <span className="text-foreground font-semibold block mb-0.5">AI Reasoning:</span>
+                                  {insight.reasoning}
+                                </div>
+                                <div>
+                                  <span className="text-[hsl(0,72%,55%)] font-semibold block mb-0.5">Countermeasure:</span>
+                                  {insight.action}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     ) : (
                       <div className="text-center text-muted-foreground text-xs py-12">
@@ -408,6 +467,7 @@ const FraudNetwork = () => {
               ))}
             </div>
           )}
+
         </motion.div>
       </div>
     </section>

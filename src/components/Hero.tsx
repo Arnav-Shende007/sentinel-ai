@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import TransactionTicker from "./TransactionTicker";
 
 const Hero = () => {
@@ -69,8 +69,8 @@ const Hero = () => {
             transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <a href="#demo" className="btn-primary">
-              <Play className="w-4 h-4" /> Live Demo
+            <a href="#rules-vs-ai" className="btn-primary">
+              <ShieldCheck className="w-4 h-4" /> Try It Now
             </a>
             <a href="#dashboard" className="btn-outline">
               View Dashboard <ArrowRight className="w-4 h-4" />

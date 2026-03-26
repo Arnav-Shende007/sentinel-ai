@@ -3,15 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Menu, X } from "lucide-react";
 
 const links = [
-  { label: "Features", href: "#features" },
   { label: "Rules vs AI", href: "#rules-vs-ai" },
   { label: "Batch Scan", href: "#batch-scan" },
   { label: "Fraud Ring", href: "#fraud-network" },
-  { label: "Models", href: "#models" },
+  { label: "Models & Metrics", href: "#ai-models-metrics" },
   { label: "XAI", href: "#explainable-ai" },
   { label: "Prediction", href: "#prediction" },
   { label: "Alerts", href: "#alerts" },
-  { label: "Metrics", href: "#metrics" },
 ];
 
 const Navbar = () => {
@@ -49,9 +47,6 @@ const Navbar = () => {
               {l.label}
             </a>
           ))}
-          <a href="#demo" className="btn-primary text-xs px-4 py-2">
-            Live Demo
-          </a>
         </div>
 
         <button
