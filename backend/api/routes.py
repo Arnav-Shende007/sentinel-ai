@@ -836,3 +836,38 @@ async def get_graph_node(node_id: str):
         "outgoing_peers": outgoing_peers[:10],
         "cluster": cluster_info,
     }
+
+
+# ─── Alert Dispatch Endpoints ───────────────────────────────────────────
+
+
+class AlertDispatchInput(BaseModel):
+    """Payload sent from the frontend Dispatch Alert buttons."""
+    id: str = "ALT-0000"
+    severity: str = "HIGH"
+    amount: str = "₹0"
+    risk_score: int = 0
+    sender: str = ""
+    receiver: str = ""
+    status: str = "Flagged"
+    ai_triggers: list = []
+
+
+@router.post("/send-sms")
+async def send_sms(payload: AlertDispatchInput):
+    """Dispatch an SMS alert for the selected fraud alert."""
+    from services.sms_service import send_sms_alert
+    result = send_sms_alert(payload.dict())
+    if not result.get("success"):
+        raise HTTPException(status_code=502, detail=result.get("error", "SMS send failed"))
+    return result
+
+
+@router.post("/send-email")
+async def send_email(payload: AlertDispatchInput):
+    """Dispatch an email alert for the selected fraud alert."""
+    from services.email_service import send_email_alert
+    result = send_email_alert(payload.dict())
+    if not result.get("success"):
+        raise HTTPException(status_code=502, detail=result.get("error", "Email send failed"))
+    return result
