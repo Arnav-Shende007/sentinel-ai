@@ -8,6 +8,10 @@ import os
 # Ensure backend dir is on the path
 sys.path.insert(0, os.path.dirname(__file__))
 
+# Load .env for Twilio / SMTP credentials
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn

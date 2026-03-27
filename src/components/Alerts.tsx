@@ -86,9 +86,48 @@ const Alerts = () => {
       .catch(() => setLoading(false));
   }, []);
 
-  const handleSend = (channel: string) => {
-    setSent((p) => [...p, channel]);
-    setTimeout(() => setSent((p) => p.filter((c) => c !== channel)), 3000);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  const handleSend = async (channel: string) => {
+    if (!selected) return;
+
+    // Push is local-only (no backend)
+    if (channel === "Push") {
+      setSent((p) => [...p, channel]);
+      setTimeout(() => setSent((p) => p.filter((c) => c !== channel)), 3000);
+      return;
+    }
+
+    const endpoint = channel === "SMS" ? "/api/send-sms" : "/api/send-email";
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selected.id,
+          severity: selected.severity,
+          amount: selected.amount,
+          risk_score: selected.risk_score,
+          sender: selected.sender,
+          receiver: selected.receiver,
+          status: selected.status,
+          ai_triggers: selected.ai_triggers,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Unknown error" }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      setSent((p) => [...p, channel]);
+      setSendError(null);
+      setTimeout(() => setSent((p) => p.filter((c) => c !== channel)), 3000);
+    } catch (e: any) {
+      setSendError(`${channel} failed: ${e.message}`);
+      setTimeout(() => setSendError(null), 4000);
+    }
   };
 
   const selected = alerts.find((a) => a.id === selectedId) || null;
@@ -396,6 +435,15 @@ const Alerts = () => {
                         </button>
                       ))}
                     </div>
+                    {sendError && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-2 text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1.5"
+                      >
+                        {sendError}
+                      </motion.p>
+                    )}
                   </div>
                 </div>
               </motion.div>
