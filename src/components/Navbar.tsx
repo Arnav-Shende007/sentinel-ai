@@ -10,6 +10,8 @@ const links = [
   { label: "XAI", href: "#explainable-ai" },
   { label: "Prediction", href: "#prediction" },
   { label: "Alerts", href: "#alerts" },
+  { label: "Register Complaint", href: "https://cybercrime.gov.in/Default.aspx" },
+  { label: "Helpline Number", href: "#" }
 ];
 
 const Navbar = () => {
@@ -27,9 +29,8 @@ const Navbar = () => {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? "bg-background/80 backdrop-blur-xl border-b border-white/[0.06]" : ""
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "bg-background/80 backdrop-blur-xl border-b border-white/[0.06]" : ""
+        }`}
     >
       <div className="section-container flex items-center justify-between h-16">
         <a href="#" className="flex items-center gap-2 text-primary font-bold text-lg">
