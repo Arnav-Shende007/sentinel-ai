@@ -15,54 +15,16 @@ FRAUD_RATE = 0.04  # 4% fraud rate
 
 # Indian cities with lat/lon
 CITIES = {
-    # Metros
     "Mumbai": (19.076, 72.8777),
     "Delhi": (28.7041, 77.1025),
     "Bangalore": (12.9716, 77.5946),
-    "Hyderabad": (17.385, 78.4867),
     "Chennai": (13.0827, 80.2707),
     "Kolkata": (22.5726, 88.3639),
-    # West India
+    "Hyderabad": (17.385, 78.4867),
     "Pune": (18.5204, 73.8567),
     "Ahmedabad": (23.0225, 72.5714),
-    "Surat": (21.1702, 72.8311),
-    "Vadodara": (22.3072, 73.1812),
-    "Rajkot": (22.3039, 70.8022),
-    "Nashik": (19.9975, 73.7898),
-    "Alandi": (18.6768, 73.8984),
-    "Goa": (15.2993, 74.124),
-    # North India
     "Jaipur": (26.9124, 75.7873),
     "Lucknow": (26.8467, 80.9462),
-    "Chandigarh": (30.7333, 76.7794),
-    "Dehradun": (30.3165, 78.0322),
-    "Amritsar": (31.634, 74.8723),
-    "Varanasi": (25.3176, 82.9739),
-    "Agra": (27.1767, 78.0081),
-    "Kanpur": (26.4499, 80.3319),
-    "Noida": (28.5355, 77.391),
-    "Gurugram": (28.4595, 77.0266),
-    # Central India
-    "Nagpur": (21.1458, 79.0882),
-    "Indore": (22.7196, 75.8577),
-    "Bhopal": (23.2599, 77.4126),
-    "Raipur": (21.2514, 81.6296),
-    # South India
-    "Kochi": (9.9312, 76.2673),
-    "Coimbatore": (11.0168, 76.9558),
-    "Visakhapatnam": (17.6868, 83.2185),
-    "Thiruvananthapuram": (8.5241, 76.9366),
-    "Mysuru": (12.2958, 76.6394),
-    "Mangaluru": (12.9141, 74.856),
-    "Madurai": (9.9252, 78.1198),
-    "Vijayawada": (16.5062, 80.6480),
-    # East & Northeast India
-    "Patna": (25.6093, 85.1376),
-    "Ranchi": (23.3441, 85.3096),
-    "Guwahati": (26.1445, 91.7362),
-    "Bhubaneswar": (20.2961, 85.8245),
-    "Siliguri": (26.7271, 88.3953),
-    "Imphal": (24.817, 93.9368),
 }
 
 DEVICES = [
