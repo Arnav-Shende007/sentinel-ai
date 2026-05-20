@@ -53,7 +53,7 @@ async def startup():
     print("\n[1/5] Loading dataset...")
     df = get_dataset()
     routes.dataset = df
-    print(f"  ✓ {len(df)} transactions loaded, {df['is_fraud'].sum()} fraud cases ({df['is_fraud'].mean():.2%} fraud rate)")
+    print(f"  [OK] {len(df)} transactions loaded, {df['is_fraud'].sum()} fraud cases ({df['is_fraud'].mean():.2%} fraud rate)")
 
     # 2. Train risk scorer
     print("\n[2/5] Training XGBoost risk scorer...")
@@ -61,7 +61,7 @@ async def startup():
     if not scorer.load():
         scorer.train(df)
     else:
-        print("  ✓ Loaded pre-trained model")
+        print("  [OK] Loaded pre-trained model")
     routes.risk_scorer = scorer
 
     # 3. Build behavioral profiles
@@ -83,7 +83,7 @@ async def startup():
     routes.fraud_forecaster = forecaster
 
     print("\n" + "=" * 60)
-    print("  ✓ All systems initialized. API ready.")
+    print("  [OK] All systems initialized. API ready.")
     print("=" * 60)
 
 
