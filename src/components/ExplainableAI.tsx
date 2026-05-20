@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip, ReferenceLine, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Loader2 } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface Factor { name: string; feature_key: string; impact: number; direction: string; color: string; }
 interface ExplainableData { transaction_id: string; fraud_score: number; factors: Factor[]; }
@@ -39,7 +40,7 @@ const ExplainableAI = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/explainable").then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+    fetch(getApiUrl("/api/explainable")).then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   if (loading) {

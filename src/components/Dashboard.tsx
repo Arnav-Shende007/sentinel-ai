@@ -5,6 +5,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { ShieldAlert, ShieldCheck, TrendingDown, Activity, Loader2 } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface DashboardData {
   stats: { total_transactions: number; fraud_detected: number; fraud_prevented: number; false_positive_reduction: number };
@@ -36,7 +37,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/dashboard")
+    fetch(getApiUrl("/api/dashboard"))
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));

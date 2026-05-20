@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Brain, TreeDeciduous, GitBranch, Activity, Award, Loader2 } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 /* ── Model cards (static) ── */
 const models = [
@@ -55,7 +56,7 @@ const AIModelsAndMetrics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/metrics")
+    fetch(getApiUrl("/api/metrics"))
       .then((r) => r.json())
       .then((d) => { setMetrics(d); setLoading(false); })
       .catch(() => setLoading(false));

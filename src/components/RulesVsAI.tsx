@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, ShieldCheck, ShieldAlert, Loader2, CheckCircle2, XCircle, Zap, BookOpen, AlertTriangle, RotateCcw } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface FeatureContribution {
   feature: string;
@@ -160,7 +161,7 @@ const RulesVsAI = () => {
     setAiFlash(null);
 
     try {
-      const res = await fetch("/api/score", {
+      const res = await fetch(getApiUrl("/api/score"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

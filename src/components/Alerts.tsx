@@ -6,6 +6,7 @@ import {
   Clock, Smartphone, UserX, TrendingUp, ChevronRight
 } from "lucide-react";
 import ComplianceReportModal from "./ComplianceReportModal";
+import { getApiUrl } from "@/lib/api";
 
 interface AITrigger {
   factor: string;
@@ -75,7 +76,7 @@ const Alerts = () => {
   const [filter, setFilter] = useState<"ALL" | "CRITICAL" | "HIGH">("ALL");
 
   useEffect(() => {
-    fetch("/api/alerts")
+    fetch(getApiUrl("/api/alerts"))
       .then((r) => r.json())
       .then((d) => {
         const a = d.alerts || [];
@@ -98,7 +99,7 @@ const Alerts = () => {
       return;
     }
 
-    const endpoint = channel === "SMS" ? "/api/send-sms" : "/api/send-email";
+    const endpoint = channel === "SMS" ? getApiUrl("/api/send-sms") : getApiUrl("/api/send-email");
 
     try {
       const res = await fetch(endpoint, {

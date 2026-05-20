@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, Globe, Target, X, ArrowDownLeft, ArrowUpRight, Network, Fingerprint, BarChart3, ShieldAlert } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface GraphNode { id: string; x: number; y: number; fraud: boolean; mule: boolean; mule_score: number; community: number; }
 interface GraphEdge { from: string; to: string; fraud: boolean; weight: number; }
@@ -61,7 +62,7 @@ const FraudNetwork = () => {
   const normalData = useMemo(() => generateNormalNodes(80), []);
 
   useEffect(() => {
-    fetch("/api/graph").then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+    fetch(getApiUrl("/api/graph")).then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   const handleDetect = useCallback(() => {
@@ -85,7 +86,7 @@ const FraudNetwork = () => {
     setNodeDetail(null);
 
     try {
-      const res = await fetch(`/api/graph/node/${encodeURIComponent(node.id)}`);
+      const res = await fetch(getApiUrl(`/api/graph/node/${encodeURIComponent(node.id)}`));
       if (res.ok) {
         const detail = await res.json();
         setNodeDetail(detail);

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Loader2, ShieldAlert, CheckCircle2, Zap, BarChart3, Clock, XCircle, FileText, Download, X, ChevronDown, TrendingUp, AlertTriangle, ArrowRight } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface BlockedTransaction {
   transaction_id: string;
@@ -121,7 +122,7 @@ const BatchProcessing = () => {
       const formData = new FormData();
       formData.append("file", csvFile);
 
-      const res = await fetch("/api/batch-scan-csv", {
+      const res = await fetch(getApiUrl("/api/batch-scan-csv"), {
         method: "POST",
         body: formData,
       });
@@ -158,7 +159,7 @@ const BatchProcessing = () => {
     animationDone.current = false;
 
     try {
-      const res = await fetch("/api/batch-scan", {
+      const res = await fetch(getApiUrl("/api/batch-scan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ count: 500 }),

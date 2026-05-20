@@ -5,6 +5,7 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
 } from "recharts";
 import { AlertTriangle, Loader2, Clock, ShieldAlert, Smartphone, MapPin, Users, CreditCard, Fingerprint, Activity } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface Target {
   user_id: string;
@@ -61,7 +62,7 @@ const FuturePrediction = () => {
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
 
   useEffect(() => {
-    fetch("/api/forecast")
+    fetch(getApiUrl("/api/forecast"))
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
