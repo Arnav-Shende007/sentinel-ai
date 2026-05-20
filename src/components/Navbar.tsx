@@ -35,7 +35,7 @@ const Navbar = () => {
       <div className="section-container flex items-center justify-between h-16">
         <a href="#" className="flex items-center gap-2 text-primary font-bold text-lg">
           <Shield className="w-6 h-6" />
-          <span>FraudShield</span>
+          <span>Sentinel AI</span>
         </a>
 
         <div className="hidden lg:flex items-center gap-4 xl:gap-6">

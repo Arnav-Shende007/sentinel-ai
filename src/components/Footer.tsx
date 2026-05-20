@@ -6,7 +6,7 @@ const Footer = () => (
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-2 text-primary font-bold">
           <Shield className="w-5 h-5" />
-          FraudShield
+          Sentinel AI
         </div>
         <div className="flex flex-wrap items-center gap-6 text-xs text-muted-foreground">
           <a href="#features" className="hover:text-foreground transition-colors">Features</a>
