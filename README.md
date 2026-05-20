@@ -108,3 +108,30 @@ sentinel-ai/
 ├── tailwind.config.ts     # Tailwind CSS configuration
 └── README.md              # Project documentation
 ```
+
+---
+
+## 🚀 Deployment & Hosting (Split Architecture)
+
+Sentinel AI is optimized for split hosting:
+- **Backend (FastAPI)**: Hosted on **Render** (Python Web Service).
+- **Frontend (React Vite)**: Hosted on **Vercel** (Static Site).
+
+### Backend (Render)
+1. Create a **Web Service** on Render pointing to this repository.
+2. Set the **Root Directory** to `backend`.
+3. Set the **Build Command** to `pip install -r requirements.txt`.
+4. Set the **Start Command** to `python main.py`.
+5. ⚠️ **CRITICAL Environment Variable**: In Render's **Environment** tab, add an environment variable:
+   * **Key**: `PYTHON_VERSION`
+   * **Value**: `3.10.14` (or `3.11.9`)
+   * *This forces Render to use a stable Python environment and downloads pre-compiled wheels for numpy, pandas, xgboost, and shap instantly—preventing long C++ compilation builds or Python 3.14+ crashes.*
+
+### Frontend (Vercel)
+1. Import the repository on Vercel.
+2. Vercel automatically detects the **Vite** preset and sets the build settings.
+3. ⚠️ **CRITICAL Environment Variable**: In Vercel's project settings, add an environment variable:
+   * **Key**: `VITE_API_URL`
+   * **Value**: *Your hosted Render URL (e.g. `https://sentinel-ai-backend.onrender.com`)*
+   * *Make sure there is no trailing slash `/` at the end of the URL.*
+4. Click **Deploy**.
